@@ -20,6 +20,14 @@ inputs = json.load(sys.stdin)
 outputs = {}
 
 
+def secret_box(secret_key, input_nonce, plaintext):
+    poly_key = xsalsa20_stream(secret_key,input_nonce,len(plaintext)+32)
+    Poly1305Key=poly_key[:32]
+    xorresult =xor_bytes( plaintext,poly_key[32:])
+    Poly1305mac=Poly1305.generate_tag(Poly1305Key,xorresult)
+    result=Poly1305mac + xorresult
+    return result.hex()
+
 
 
 def xor_bytes(a, b):
@@ -62,15 +70,14 @@ outputs["problem3"] =Poly1305.generate_tag(key3, p3_input).hex()
 
 
 # Problem 4
-#
-# p4_input=inputs["problem4"].encode()
-#
-# key4=b"G" * 32
-# nonce=b"H" * 24
-# p4_len=32+len(p4_input)
-# salsa4=xsalsa20_stream(key, nonce, p4_len).hex()
-# Poly1305=salsa4[32,len(salsa4)]
-# xored=xor_bytes(salsa4,p4_input)
+
+p4_input=inputs["problem4"].encode()
+
+key = b"G" * 32
+nonce = b"H" * 24
+message = inputs["problem4"].encode()
+cipher_text = secret_box(key, nonce, message)
+outputs['problem4'] = cipher_text
 
 
 
